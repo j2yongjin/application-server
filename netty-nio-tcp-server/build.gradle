@@ -1,0 +1,8 @@
+
+dependencies {
+
+    compile group: 'io.netty', name: 'netty-all', version: '4.1.29.Final'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter', version: '2.0.0.RELEASE'
+    compile group: 'org.projectlombok', name: 'lombok', version: '1.18.2'
+
+}
