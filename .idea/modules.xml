@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/application-server.iml" filepath="$PROJECT_DIR$/.idea/application-server.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/netty-nio-tcp-server/netty-nio-tcp-server.iml" filepath="$PROJECT_DIR$/.idea/modules/netty-nio-tcp-server/netty-nio-tcp-server.iml" group="netty-nio-tcp-server" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/netty-nio-tcp-server/netty-nio-tcp-server_main.iml" filepath="$PROJECT_DIR$/.idea/modules/netty-nio-tcp-server/netty-nio-tcp-server_main.iml" group="netty-nio-tcp-server" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/netty-nio-tcp-server/netty-nio-tcp-server_test.iml" filepath="$PROJECT_DIR$/.idea/modules/netty-nio-tcp-server/netty-nio-tcp-server_test.iml" group="netty-nio-tcp-server" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/netty-rest-server/netty-rest-server.iml" filepath="$PROJECT_DIR$/.idea/modules/netty-rest-server/netty-rest-server.iml" group="netty-rest-server" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/netty-rest-server/netty-rest-server_main.iml" filepath="$PROJECT_DIR$/.idea/modules/netty-rest-server/netty-rest-server_main.iml" group="netty-rest-server" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/netty-rest-server/netty-rest-server_test.iml" filepath="$PROJECT_DIR$/.idea/modules/netty-rest-server/netty-rest-server_test.iml" group="netty-rest-server" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nio-tcp-client/nio-tcp-client.iml" filepath="$PROJECT_DIR$/.idea/modules/nio-tcp-client/nio-tcp-client.iml" group="nio-tcp-client" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nio-tcp-client/nio-tcp-client_main.iml" filepath="$PROJECT_DIR$/.idea/modules/nio-tcp-client/nio-tcp-client_main.iml" group="nio-tcp-client" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nio-tcp-client/nio-tcp-client_test.iml" filepath="$PROJECT_DIR$/.idea/modules/nio-tcp-client/nio-tcp-client_test.iml" group="nio-tcp-client" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nio-tcp-server/nio-tcp-server.iml" filepath="$PROJECT_DIR$/.idea/modules/nio-tcp-server/nio-tcp-server.iml" group="nio-tcp-server" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nio-tcp-server/nio-tcp-server_main.iml" filepath="$PROJECT_DIR$/.idea/modules/nio-tcp-server/nio-tcp-server_main.iml" group="nio-tcp-server" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/nio-tcp-server/nio-tcp-server_test.iml" filepath="$PROJECT_DIR$/.idea/modules/nio-tcp-server/nio-tcp-server_test.iml" group="nio-tcp-server" />
+    </modules>
+  </component>
+</project>
