@@ -17,9 +17,9 @@ import org.springframework.context.annotation.Configuration;
 public class ServerConfig {
 
     @Value("${tcp.port}")
-    private int tcpPort;
+    private int tcpPort=10051;
 
-    @Value("${boss.thradcount}")
+    @Value("${boss.threadcount}")
     private int bossThreadCount;
 
     @Value("${worker.threadcount}")

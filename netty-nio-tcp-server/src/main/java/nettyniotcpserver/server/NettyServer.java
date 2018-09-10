@@ -44,7 +44,8 @@ public class NettyServer {
                     .option(ChannelOption.SO_BACKLOG,128)
                     .childOption(ChannelOption.SO_KEEPALIVE,true);
             ChannelFuture channelFuture = serverBootstrap.bind(new InetSocketAddress(serverConfig.getTcpPort()));
-            channelFuture.sync();
+
+            log.info(" Server Start Binding Port {}" , serverConfig.getTcpPort());
             channelFuture.channel().closeFuture().sync();
         } catch (InterruptedException e) {
             log.error(" InterruptedException Error " , e);

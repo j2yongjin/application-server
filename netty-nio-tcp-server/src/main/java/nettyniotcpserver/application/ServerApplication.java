@@ -22,7 +22,7 @@ public class ServerApplication {
         springApplication.addListeners(new GracefulShutdown());
         ConfigurableApplicationContext configurableApplicationContext =
                 springApplication.run(args);
-        log.info(" MainApplication Start ");
+        log.info(" Server Application Start ");
 
     }
 }

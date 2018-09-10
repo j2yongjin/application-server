@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import lombok.extern.slf4j.Slf4j;
+import nettyniotcpserver.protocol.AbstractProtocol;
+import nettyniotcpserver.protocol.Protocol;
 
 import java.util.List;
 

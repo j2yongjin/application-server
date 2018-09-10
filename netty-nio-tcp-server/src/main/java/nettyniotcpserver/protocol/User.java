@@ -9,8 +9,10 @@ package nettyniotcpserver.protocol;
  */
 public class User extends AbstractProtocol {
 
-    public User(int type, int length) {
-        super(type, length);
+    public User(TransactionCode trsactionCode, int bodyLength, String id, String password) {
+        super(trsactionCode, bodyLength);
+        this.id = id;
+        this.password = password;
     }
 
     String id;

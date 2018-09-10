@@ -10,14 +10,13 @@ import lombok.Data;
  * @desc :
  */
 @Data
-public abstract class AbstractProtocol {
+public abstract class AbstractProtocol implements Protocol {
 
-    int type;
-    int length;
+    TransactionCode trsactionCode;
+    int bodyLength;
 
-    public AbstractProtocol(int type, int length) {
-        this.type = type;
-        this.length = length;
+    public AbstractProtocol(TransactionCode trsactionCode, int bodyLength) {
+        this.trsactionCode = trsactionCode;
+        this.bodyLength = bodyLength;
     }
-
 }

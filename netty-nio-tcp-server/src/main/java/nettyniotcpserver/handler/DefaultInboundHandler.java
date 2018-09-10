@@ -4,6 +4,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import nettyniotcpserver.protocol.Protocol;
 
 /**
  * application-server
@@ -14,10 +15,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @NoArgsConstructor
 @Slf4j
-public class DefaultInboundHandler extends SimpleChannelInboundHandler<Object>{
+public class DefaultInboundHandler extends SimpleChannelInboundHandler<Protocol>{
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, Object msg) throws Exception {
+    protected void channelRead0(ChannelHandlerContext ctx, Protocol msg) throws Exception {
 
 
 
