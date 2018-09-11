@@ -13,4 +13,9 @@ public class Deposit extends AbstractProtocol {
         this.guid = guid;
         this.depositAmount = depositAmount;
     }
+
+    @Override
+    public TransactionCode getTrCode() {
+        return null;
+    }
 }

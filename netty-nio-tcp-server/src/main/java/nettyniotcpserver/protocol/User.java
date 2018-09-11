@@ -17,4 +17,9 @@ public class User extends AbstractProtocol {
 
     String id;
     String password;
+
+    @Override
+    public TransactionCode getTrCode() {
+        return null;
+    }
 }
