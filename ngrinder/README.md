@@ -7,8 +7,7 @@
 
 2. agent
   sudo docker pull ngrinder/agent
-  sudo docker run -d -e CONTROLLER_ADDR=10.0.2.15:8080 ngrinder/agent
-  
+  docker run -v ~/ngrinder-agent:/opt/ngrinder-agent -d ngrinder/agent 10.0.2.15:8080
 > 사용법
 
   https://github.com/naver/ngrinder/wiki/User-Guide
