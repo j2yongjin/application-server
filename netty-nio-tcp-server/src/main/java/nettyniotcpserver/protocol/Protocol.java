@@ -7,6 +7,4 @@ public interface Protocol {
 
     public TransactionCode getTrCode();
 
-
-
 }
