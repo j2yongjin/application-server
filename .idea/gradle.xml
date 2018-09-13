@@ -10,6 +10,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/apm-scouter" />
+            <option value="$PROJECT_DIR$/docker" />
             <option value="$PROJECT_DIR$/netty-nio-tcp-server" />
             <option value="$PROJECT_DIR$/netty-rest-server" />
             <option value="$PROJECT_DIR$/ngrinder" />

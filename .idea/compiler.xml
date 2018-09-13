@@ -9,6 +9,8 @@
       <module name="apm-scouter_test" target="1.8" />
       <module name="application-server_main" target="1.8" />
       <module name="application-server_test" target="1.8" />
+      <module name="docker_main" target="1.8" />
+      <module name="docker_test" target="1.8" />
       <module name="netty-nio-tcp-server_main" target="1.8" />
       <module name="netty-nio-tcp-server_test" target="1.8" />
       <module name="netty-rest-server_main" target="1.8" />
