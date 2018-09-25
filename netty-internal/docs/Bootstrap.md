@@ -10,7 +10,7 @@
 ##### 서버 사용예시
 부트스트랩 설정 예시
 
-ServerBootstrap serverBootstrap = new ServerBootstrap();
+    ServerBootstrap serverBootstrap = new ServerBootstrap();
             serverBootstrap.group(bossGroup,wokerGroup)
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new SocketChannelInitializer())
@@ -22,9 +22,9 @@ ServerBootstrap serverBootstrap = new ServerBootstrap();
 ##### 주요 함수
 
 ##### 생성자
-public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerChannel>{
-...
-private ServerBootstrap(ServerBootstrap bootstrap) {
+    public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerChannel>{
+    ...
+    private ServerBootstrap(ServerBootstrap bootstrap) {
         super(bootstrap);
         childGroup = bootstrap.childGroup;
         childHandler = bootstrap.childHandler;
@@ -35,11 +35,11 @@ private ServerBootstrap(ServerBootstrap bootstrap) {
             childAttrs.putAll(bootstrap.childAttrs);
         }
     }
-...
+    ...
 
-public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerChannel> {
-...
-AbstractBootstrap(AbstractBootstrap<B, C> bootstrap) {
+    public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerChannel> {
+    ...
+    AbstractBootstrap(AbstractBootstrap<B, C> bootstrap) {
         group = bootstrap.group;
         channelFactory = bootstrap.channelFactory;
         handler = bootstrap.handler;
@@ -51,7 +51,7 @@ AbstractBootstrap(AbstractBootstrap<B, C> bootstrap) {
             attrs.putAll(bootstrap.attrs);
         }
     }
-...
+    ...
 
 ##### ChannelFactory
 채널 팩토리 생성
@@ -60,9 +60,9 @@ AbstractBootstrap(AbstractBootstrap<B, C> bootstrap) {
 
 채널 팩토리 생성 예제
 
-public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C extends Channel> implements Cloneable {
-...
-public B channel(Class<? extends C> channelClass) {
+    public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C extends Channel> implements Cloneable {
+    ...
+    public B channel(Class<? extends C> channelClass) {
         if (channelClass == null) {
             throw new NullPointerException("channelClass");
         }
@@ -78,7 +78,7 @@ public B channel(Class<? extends C> channelClass) {
 
 클래스 등록
 
-@Override
+    @Override
     void init(Channel channel) throws Exception {
         final Map<ChannelOption<?>, Object> options = options0();
         synchronized (options) {
@@ -129,7 +129,7 @@ public B channel(Class<? extends C> channelClass) {
 
 ##### group
 
-public ServerBootstrap group(EventLoopGroup parentGroup, EventLoopGroup childGroup) {
+    public ServerBootstrap group(EventLoopGroup parentGroup, EventLoopGroup childGroup) {
         super.group(parentGroup);
         if (childGroup == null) {
             throw new NullPointerException("childGroup");
