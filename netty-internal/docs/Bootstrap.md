@@ -74,7 +74,7 @@ public B channel(Class<? extends C> channelClass) {
 ##### ServerBootstrapAcceptor
 신규 connection 발생시 호출하는 클래스 
 
-![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/ServerBootstrapAcceptor.png)
+![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/ServerBootStrapAcceptor.png)
 
 클래스 등록
 
