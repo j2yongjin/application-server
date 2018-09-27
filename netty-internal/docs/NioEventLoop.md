@@ -165,5 +165,74 @@ EventExecutor는 이벤트 루프에서 Thread가 실행되는지 확인하는 �
 ##### DefaultEventExecutor
 제출 된 모든 작업을 직렬 방식으로 실행하는 기본 SingleThreadEventExecutor 구현
 
-![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/DefuaultEventExecutor.png)
+![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/DefaultEventExecutor.png)
+
+###### SingleThreadEventExecutor
+제출 된 모든 태스크를 단일 thread로 실행하는, OrderedEventExecutor의 추상 기본 클래스입니다.
+
+    생성자
+    
+    protected SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor,
+                                          boolean addTaskWakesUp, int maxPendingTasks,
+                                          RejectedExecutionHandler rejectedHandler) {
+          super(parent);
+          this.addTaskWakesUp = addTaskWakesUp;
+          this.maxPendingTasks = Math.max(16, maxPendingTasks);
+          this.executor = ObjectUtil.checkNotNull(executor, "executor");
+          taskQueue = newTaskQueue(this.maxPendingTasks);
+          rejectedExecutionHandler = ObjectUtil.checkNotNull(rejectedHandler, "rejectedHandler");
+     }
+
+     protected Queue<Runnable> newTaskQueue(int maxPendingTasks) {
+             return new LinkedBlockingQueue<Runnable>(maxPendingTasks);
+     }
+
+     protected static Runnable pollTaskFrom(Queue<Runnable> taskQueue) {
+             for (;;) {
+                 Runnable task = taskQueue.poll();
+                 if (task == WAKEUP_TASK) {
+                     continue;
+                 }
+                 return task;
+             }
+     }
+     
+     protected Runnable takeTask()
+      ...
+      
+     private boolean fetchFromScheduledTaskQueue() {
+     ...
+     
+   
+###### OrderedEventExecutor
+제출 된 모든 태스크를 순서 붙이고 / 직렬 방식으로 처리하는 EventExecutor의 마커 인터페이스입니다.
+
+###### AbstractScheduledEventExecutor
+
+스케줄링을 지원하고 싶은 EventExecutor의 추상 기본 클래스입니다.
+
+    PriorityQueue<ScheduledFutureTask<?>> scheduledTaskQueue() {
+        if (scheduledTaskQueue == null) {
+            scheduledTaskQueue = new DefaultPriorityQueue<ScheduledFutureTask<?>>(
+                    SCHEDULED_FUTURE_TASK_COMPARATOR,
+                    // Use same initial capacity as java.util.PriorityQueue
+                    11);
+        }
+        return scheduledTaskQueue;
+    }
+    
+    <V> ScheduledFuture<V> schedule(final ScheduledFutureTask<V> task) {
+            if (inEventLoop()) {
+                scheduledTaskQueue().add(task);
+            } else {
+                execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        scheduledTaskQueue().add(task);
+                    }
+                });
+            }
+    
+            return task;
+    }
 
