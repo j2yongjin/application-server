@@ -157,6 +157,13 @@ EventLoop 객체 생성
     
 ##### EventExecutor
 
+EventExecutor는 이벤트 루프에서 Thread가 실행되는지 확인하는 편리한 메소드와 함께 제공되는 특별한 EventExecutorGroup입니다. 이 외에도 EventExecutorGroup을 확장하여 메서드에 액세스 할 수있는 일반적인 방법을 제공합니다
+
 ![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/EventExecutor.png)
 
+
+##### DefaultEventExecutor
+제출 된 모든 작업을 직렬 방식으로 실행하는 기본 SingleThreadEventExecutor 구현
+
+![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/DefuaultEventExecutor.png)
 
