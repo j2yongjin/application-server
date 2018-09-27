@@ -411,7 +411,7 @@ EventExecutorGroup이 종료되었습니다.
 
 ![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/GloalEventExecutor.png)
 
-#### Boss Group 갭쳐
+#### BossGroup 갭쳐
 
 
 ![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/bossGroup_memory.png)
