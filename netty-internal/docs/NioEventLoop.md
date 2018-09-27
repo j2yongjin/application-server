@@ -3,14 +3,17 @@
 등록 된 채널에 대한 모든 I / O 작업을 처리합니다. 하나의 EventLoop 인스턴스는 일반적으로 둘 이상의 채널을 처리하지만 구현 세부 사항 및 내부 구조에 따라 다를 수 있습니다
 
 ## EventLoopGroup
-이벤트 루프 중에 나중에 선택하기 위해 처리되는 채널을 등록 할 수있는 특수 EventExecutorGroup
+이벤트 루프 중에 나중에 선택하기 위해 처리되는 채널을 등록 할 수있는 특별한 EventExecutorGroup
 
 ## NioEventLoop
 SingleThreadEventLoop 구현은 채널을 셀렉터에 등록하고 이벤트 루프에서 이들을 멀티 플레 싱 (multi-plexing)합니다.
 
 ## AbstractNioChannel
-Abstract base class for Channel implementations which use a Selector based approach
+
+Selector 기반의 방법을 사용하는 채널 구현의 추상 기본 클래스
+
 ### NioEventLoopGroup
+    NIO Selector 기반 채널에 사용되는 MultithreadEventLoopGroup 구현
 
 ![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/NioEventLoopGroup_Diagram.png)
 
@@ -26,7 +29,7 @@ Abstract base class for Channel implementations which use a Selector based appro
         
 
 #### 생성자
-EventLoop 객체 생성
+  EventLoop 객체 생성
 
     public class NioEventLoopGroup extends MultithreadEventLoopGroup {
     ...
@@ -171,7 +174,8 @@ EventExecutor는 이벤트 루프에서 Thread가 실행되는지 확인하는 �
 제출 된 모든 태스크를 단일 thread로 실행하는, OrderedEventExecutor의 추상 기본 클래스입니다.
 
     생성자
-    
+    public abstract class SingleThreadEventExecutor extends AbstractScheduledEventExecutor implements OrderedEventExecutor {
+    ...
     protected SingleThreadEventExecutor(EventExecutorGroup parent, Executor executor,
                                           boolean addTaskWakesUp, int maxPendingTasks,
                                           RejectedExecutionHandler rejectedHandler) {
@@ -233,6 +237,181 @@ EventExecutor는 이벤트 루프에서 Thread가 실행되는지 확인하는 �
                 });
             }
     
+   
             return task;
     }
+    
+    
+##### NioEventLoopGroup 
 
+   NioEventLoopGroup은 
+
+사용예시
+    private final EventExecutor[] children;
+    children[i] = newChild(executor, args);
+
+함수 호출
+
+    @Override
+    protected EventLoop newChild(Executor executor, Object... args) throws Exception {
+        return new NioEventLoop(this, executor, (SelectorProvider) args[0],
+            ((SelectStrategyFactory) args[1]).newSelectStrategy(), (RejectedExecutionHandler) args[2]);
+    }
+    
+NioEventLoop 생성자
+
+    public final class NioEventLoop extends SingleThreadEventLoop {
+    ...
+    
+    NioEventLoop(NioEventLoopGroup parent, Executor executor, SelectorProvider selectorProvider,
+                     SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler) {
+            super(parent, executor, false, DEFAULT_MAX_PENDING_TASKS, rejectedExecutionHandler);
+            if (selectorProvider == null) {
+                throw new NullPointerException("selectorProvider");
+            }
+            if (strategy == null) {
+                throw new NullPointerException("selectStrategy");
+            }
+            provider = selectorProvider;
+            final SelectorTuple selectorTuple = openSelector();
+            selector = selectorTuple.selector;
+            unwrappedSelector = selectorTuple.unwrappedSelector;
+            selectStrategy = strategy;
+     }
+    
+SingleThreadEventLoop 생성자
+     
+     public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor implements EventLoop {
+     ...
+     private final Queue<Runnable> tailTasks;
+        
+    ...
+    protected SingleThreadEventLoop(EventLoopGroup parent, ThreadFactory threadFactory,
+                                    boolean addTaskWakesUp, int maxPendingTasks,
+                                    RejectedExecutionHandler rejectedExecutionHandler) {
+        super(parent, threadFactory, addTaskWakesUp, maxPendingTasks, rejectedExecutionHandler);
+        tailTasks = newTaskQueue(maxPendingTasks);  // 큐 생성
+    }
+
+
+##### DefaultEventExecutorChooserFactory
+
+단순한 라운드 로빈을 사용해 다음의 EventExecutor를 선택하는 디폴트의 구현입니다
+
+    public final class DefaultEventExecutorChooserFactory implements EventExecutorChooserFactory {
+    
+    public EventExecutorChooser newChooser(EventExecutor[] executors) {
+            if (isPowerOfTwo(executors.length)) {
+                return new PowerOfTwoEventExecutorChooser(executors);
+            } else {
+                return new GenericEventExecutorChooser(executors);
+            }
+    }
+    
+    private static final class PowerOfTwoEventExecutorChooser implements EventExecutorChooser {
+            private final AtomicInteger idx = new AtomicInteger();
+            private final EventExecutor[] executors;
+    
+            PowerOfTwoEventExecutorChooser(EventExecutor[] executors) {
+                this.executors = executors;
+            }
+    
+            @Override
+            public EventExecutor next() {
+                return executors[idx.getAndIncrement() & executors.length - 1];
+            }
+        }
+        
+##### FutureListener , EventExecutor
+FutureListener
+
+![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/FutureListener.png)
+
+사용예시
+이벤트 등록
+    final FutureListener<Object> terminationListener = new FutureListener<Object>() {
+        @Override
+        public void operationComplete(Future<Object> future) throws Exception {
+            if (terminatedChildren.incrementAndGet() == children.length) {
+                terminationFuture.setSuccess(null);
+            }
+        }
+    };
+    
+    
+사용예시
+정상적으로 child eventExecutor 생성 성공 이벤트 등록
+
+이 이벤트 매니저에 의해 관리되고있는 모든 EventExecutor가 통지되었을 때에 통지되는 Future를 돌려줍니다.
+EventExecutorGroup이 종료되었습니다.
+
+    for (EventExecutor e: children) {
+        e.terminationFuture().addListener(terminationListener);
+    }
+    
+##### DefaultPromis
+
+![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/DefaultPromise.png)
+    
+
+    
+###### addListener
+    @Override
+    public Promise<V> addListener(GenericFutureListener<? extends Future<? super V>> listener) {
+        checkNotNull(listener, "listener");
+
+        synchronized (this) {
+            addListener0(listener);
+        }
+
+        if (isDone()) {
+            notifyListeners();
+        }
+
+        return this;
+    }
+###### setSuccess()
+    public Promise<V> setSuccess(V result) {
+            if (setSuccess0(result)) {
+                notifyListeners();
+                return this;
+            }
+            throw new IllegalStateException("complete already: " + this);
+        }
+###### notifyListeners()
+    private void notifyListeners() {
+        EventExecutor executor = executor();
+        if (executor.inEventLoop()) {
+            final InternalThreadLocalMap threadLocals = InternalThreadLocalMap.get();
+            final int stackDepth = threadLocals.futureListenerStackDepth();
+            if (stackDepth < MAX_LISTENER_STACK_DEPTH) {
+                threadLocals.setFutureListenerStackDepth(stackDepth + 1);
+                try {
+                    notifyListenersNow();
+                } finally {
+                    threadLocals.setFutureListenerStackDepth(stackDepth);
+                }
+                return;
+            }
+        }
+
+        safeExecute(executor, new Runnable() {
+            @Override
+            public void run() {
+                notifyListenersNow();
+            }
+        });
+    }
+
+
+#### GlobalEventExecutor
+싱글 스레드 싱글톤 EventExecutor. 스레드를 자동으로 시작하고 1 초 동안 태스크 큐에 보류중인 태스크가 없을 때 스레드를 중지합니다. 이 집행자에게 많은 수의 작업을 예약하는 것은 확장 가능하지 않습니다. 
+전용 executor를 사용한다
+
+
+![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/GloalEventExecutor.png)
+
+#### Boss Group 갭쳐
+
+
+![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/bossGroup_memory.png)
