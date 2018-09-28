@@ -140,8 +140,7 @@
         this.childGroup = childGroup;
         return this;
     }
-    
-    
+        
 #### 등록
 
     final ChannelFuture initAndRegister() {
@@ -200,7 +199,7 @@ NioServerChannel 생성
     channel = channelFactory.newChannel()
     
 ###### init
-   childGroup를 등록하고 bossGroup은  AbstractBootstrap 에서 관리
+childGroup를 등록하고 bossGroup은  AbstractBootstrap 에서 관리
 
     public class ServerBootstrap extends AbstractBootstrap<ServerBootstrap, ServerChannel> {
     ...
@@ -253,6 +252,11 @@ NioServerChannel 생성
     }
     
 ###### 등록
+
+    // config().group() 은 bossGroup
+   
+    ChannelFuture regFuture = config().group().register(channel);
+
     public abstract class MultithreadEventLoopGroup extends MultithreadEventExecutorGroup implements EventLoopGroup {
     ...
     public ChannelFuture register(Channel channel) {
@@ -343,9 +347,306 @@ addListener (GenericFutureListener)는 비 블로킹입니다. 지정된 Channel
         }
 
         
+##### NioServerSocketChannel
+    io.netty.channel.socket.ServerSocketChannel 구현체.
+     새로운 연결을 받아들이는 NIO selector 기반 구현
+     
+![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/NioServerSocketChannel_diagram.png)     
+     
+###### AbstractNioMessageChannel
+AbstractNioChannel 메세지를 조작하는 채널의 기본 클래스.
+
+###### AbstractNioChannel
+Selector 기반의 접근 방식을 사용하는 Channel 구현을위한 추상 기본 클래스입니다.
+
+    protected AbstractNioChannel(Channel parent, SelectableChannel ch, int readInterestOp) {
+        super(parent);
+        this.ch = ch;
+        this.readInterestOp = readInterestOp;
+        try {
+            ch.configureBlocking(false);
+        } catch (IOException e) {
+            try {
+                ch.close();
+            } catch (IOException e2) {
+                if (logger.isWarnEnabled()) {
+                    logger.warn(
+                            "Failed to close a partially initialized socket.", e2);
+                }
+            }
+
+            throw new ChannelException("Failed to enter non-blocking mode.", e);
+        }
+    }
+
+ 
+###### AbstractChannel
+골격(기본뼈대) 채널 구현
+
+    protected AbstractChannel(Channel parent) {
+        this.parent = parent;
+        id = newId();
+        unsafe = newUnsafe();
+        pipeline = newChannelPipeline();
+    }
     
+    /**
+     * Returns a new {@link DefaultChannelPipeline} instance.
+     */
+    protected DefaultChannelPipeline newChannelPipeline() {
+        return new DefaultChannelPipeline(this);
+    }
     
     
     
     
 
+##### DefaultChannelPipeline
+기본 ChannelPipeline 구현입니다. 채널이 생성 될 때 채널 구현에 의해 일반적으로 만들어집니다.
+![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/DefaultChannelPipeline.png)
+
+    protected DefaultChannelPipeline(Channel channel) {
+        this.channel = ObjectUtil.checkNotNull(channel, "channel");
+        succeededFuture = new SucceededChannelFuture(channel, null);
+    
+        voidPromise =  new VoidChannelPromise(channel, true);
+
+        tail = new TailContext(this);
+        head = new HeadContext(this);
+
+        head.next = tail;
+        tail.prev = head;
+    }
+
+ 
+    private AbstractChannelHandlerContext newContext(EventExecutorGroup group, String name, ChannelHandler handler) {
+         return new DefaultChannelHandlerContext(this, childExecutor(group), name, handler);
+     }
+
+###### ChannelPipeline
+
+
+##### DefaultChannelHandlerContext
+
+![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/DefaultChannelHandlerContext.png)
+
+    DefaultChannelHandlerContext(
+            DefaultChannelPipeline pipeline, EventExecutor executor, String name, ChannelHandler handler) {
+        super(pipeline, executor, name, isInbound(handler), isOutbound(handler));
+        if (handler == null) {
+            throw new NullPointerException("handler");
+        }
+        this.handler = handler;
+    }
+    
+##### DefaultChannelHandlerContext
+    abstract class AbstractChannelHandlerContext extends DefaultAttributeMap
+             implements ChannelHandlerContext, ResorceLeakHint {
+
+    AbstractChannelHandlerContext(DefaultChannelPipeline pipeline, EventExecutor executor, String name,
+                                  boolean inbound, boolean outbound) {
+        this.name = ObjectUtil.checkNotNull(name, "name");
+        this.pipeline = pipeline;
+        this.executor = executor;
+        this.inbound = inbound;
+        this.outbound = outbound;
+        // Its ordered if its driven by the EventLoop or the given Executor is an instanceof OrderedEventExecutor.
+        ordered = executor == null || executor instanceof OrderedEventExecutor;
+    }
+    
+##### 신규 connection을 맺을 경우 flow    
+
+채널 초기화 파이프 라인 등록
+
+    p.addLast(new ChannelInitializer<Channel>() {
+            @Override
+            public void initChannel(final Channel ch) throws Exception {
+                final ChannelPipeline pipeline = ch.pipeline();
+                ChannelHandler handler = config.handler();
+                if (handler != null) {
+                    pipeline.addLast(handler);
+                }
+
+                ch.eventLoop().execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        pipeline.addLast(new ServerBootstrapAcceptor(
+                                ch, currentChildGroup, currentChildHandler, currentChildOptions, currentChildAttrs));
+                    }
+                });
+            }
+        });
+
+신규 connection을 맺을 경우 실행
+ch.eventLoop() : child eventLoop
+
+    ch.eventLoop().execute(new Runnable() {
+        @Override
+        public void run() {
+            pipeline.addLast(new ServerBootstrapAcceptor(
+                    ch, currentChildGroup, currentChildHandler, currentChildOptions, currentChildAttrs));
+        }
+    });
+    
+스레드 생성
+    public abstract class SingleThreadEventExecutor extends AbstractScheduledEventExecutor implements OrderedEventExecutor {
+    ...
+    @Override
+    public void execute(Runnable task) {
+        if (task == null) {
+            throw new NullPointerException("task");
+        }
+
+        boolean inEventLoop = inEventLoop();
+        addTask(task);
+        if (!inEventLoop) {
+            startThread();
+            if (isShutdown() && removeTask(task)) {
+                reject();
+            }
+        }
+
+        if (!addTaskWakesUp && wakesUpForTask(task)) {
+            wakeup(inEventLoop);
+        }
+    }
+     
+                
+    "nioEventLoopGroup-3-1@3530" prio=10 tid=0x12 nid=NA runnable
+    java.lang.Thread.State: RUNNABLE
+	  at org.groovy.debug.hotswap.ResetAgent.matches(Unknown Source:-1)
+	  at org.groovy.debug.hotswap.ResetAgent.containsSubArray(Unknown Source:-1)
+	  at org.groovy.debug.hotswap.ResetAgent.removeTimestampField(Unknown Source:-1)
+	  at org.groovy.debug.hotswap.ResetAgent.access$000(Unknown Source:-1)
+	  at org.groovy.debug.hotswap.ResetAgent$1.transform(Unknown Source:-1)
+	  at sun.instrument.TransformerManager.transform(TransformerManager.java:188)
+	  at sun.instrument.InstrumentationImpl.transform(InstrumentationImpl.java:428)
+	  at java.lang.ClassLoader.defineClass1(ClassLoader.java:-1)
+	  at java.lang.ClassLoader.defineClass(ClassLoader.java:763)
+	  at java.security.SecureClassLoader.defineClass(SecureClassLoader.java:142)
+	  at java.net.URLClassLoader.defineClass(URLClassLoader.java:467)
+	  at java.net.URLClassLoader.access$100(URLClassLoader.java:73)
+	  at java.net.URLClassLoader$1.run(URLClassLoader.java:368)
+	  at java.net.URLClassLoader$1.run(URLClassLoader.java:362)
+	  at java.security.AccessController.doPrivileged(AccessController.java:-1)
+	  at java.net.URLClassLoader.findClass(URLClassLoader.java:361)
+	  at java.lang.ClassLoader.loadClass(ClassLoader.java:424)
+	  - locked <0xdf4> (a java.lang.Object)
+	  at sun.misc.Launcher$AppClassLoader.loadClass(Launcher.java:349)
+	  at java.lang.ClassLoader.loadClass(ClassLoader.java:357)
+	  at java.lang.ClassLoader.defineClass1(ClassLoader.java:-1)
+	  at java.lang.ClassLoader.defineClass(ClassLoader.java:763)
+	  at java.security.SecureClassLoader.defineClass(SecureClassLoader.java:142)
+	  at java.net.URLClassLoader.defineClass(URLClassLoader.java:467)
+	  at java.net.URLClassLoader.access$100(URLClassLoader.java:73)
+	  at java.net.URLClassLoader$1.run(URLClassLoader.java:368)
+	  at java.net.URLClassLoader$1.run(URLClassLoader.java:362)
+	  at java.security.AccessController.doPrivileged(AccessController.java:-1)
+	  at java.net.URLClassLoader.findClass(URLClassLoader.java:361)
+	  at java.lang.ClassLoader.loadClass(ClassLoader.java:424)
+	  - locked <0xdf5> (a java.lang.Object)
+	  at sun.misc.Launcher$AppClassLoader.loadClass(Launcher.java:349)
+	  at java.lang.ClassLoader.loadClass(ClassLoader.java:357)
+	  at nettyniotcpserver.init.SocketChannelInitializer.initChannel(SocketChannelInitializer.java:25)
+	  at nettyniotcpserver.init.SocketChannelInitializer.initChannel(SocketChannelInitializer.java:19)
+	  at io.netty.channel.ChannelInitializer.initChannel(ChannelInitializer.java:115)
+	  at io.netty.channel.ChannelInitializer.handlerAdded(ChannelInitializer.java:107)
+	  at io.netty.channel.DefaultChannelPipeline.callHandlerAdded0(DefaultChannelPipeline.java:637)
+	  at io.netty.channel.DefaultChannelPipeline.access$000(DefaultChannelPipeline.java:46)
+	  at io.netty.channel.DefaultChannelPipeline$PendingHandlerAddedTask.execute(DefaultChannelPipeline.java:1487)
+	  at io.netty.channel.DefaultChannelPipeline.callHandlerAddedForAllHandlers(DefaultChannelPipeline.java:1161)
+	  at io.netty.channel.DefaultChannelPipeline.invokeHandlerAddedIfNeeded(DefaultChannelPipeline.java:686)
+	  at io.netty.channel.AbstractChannel$AbstractUnsafe.register0(AbstractChannel.java:510)
+	  at io.netty.channel.AbstractChannel$AbstractUnsafe.access$200(AbstractChannel.java:423)
+	  at io.netty.channel.AbstractChannel$AbstractUnsafe$1.run(AbstractChannel.java:482)
+	  at io.netty.util.concurrent.AbstractEventExecutor.safeExecute(AbstractEventExecutor.java:163)
+	  at io.netty.util.concurrent.SingleThreadEventExecutor.runAllTasks(SingleThreadEventExecutor.java:404)
+	  at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:446)
+	  at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:884)
+	  at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	  at java.lang.Thread.run(Thread.java:748)
+
+"main@1" prio=5 tid=0x1 nid=NA waiting
+  java.lang.Thread.State: WAITING
+	  at java.lang.Object.wait(Object.java:-1)
+	  at java.lang.Object.wait(Object.java:502)
+	  at io.netty.util.concurrent.DefaultPromise.await(DefaultPromise.java:231)
+	  at io.netty.channel.DefaultChannelPromise.await(DefaultChannelPromise.java:131)
+	  at io.netty.channel.DefaultChannelPromise.await(DefaultChannelPromise.java:30)
+	  at io.netty.util.concurrent.DefaultPromise.sync(DefaultPromise.java:337)
+	  at io.netty.channel.DefaultChannelPromise.sync(DefaultChannelPromise.java:119)
+	  at io.netty.channel.DefaultChannelPromise.sync(DefaultChannelPromise.java:30)
+	  at nettyniotcpserver.server.NettyServer.start(NettyServer.java:48)
+	  at nettyniotcpserver.server.NettyServer.init(NettyServer.java:27)
+	  at sun.reflect.NativeMethodAccessorImpl.invoke0(NativeMethodAccessorImpl.java:-1)
+	  at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	  at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	  at java.lang.reflect.Method.invoke(Method.java:498)
+	  at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleElement.invoke(InitDestroyAnnotationBeanPostProcessor.java:369)
+	  at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor$LifecycleMetadata.invokeInitMethods(InitDestroyAnnotationBeanPostProcessor.java:312)
+	  at org.springframework.beans.factory.annotation.InitDestroyAnnotationBeanPostProcessor.postProcessBeforeInitialization(InitDestroyAnnotationBeanPostProcessor.java:135)
+	  at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.applyBeanPostProcessorsBeforeInitialization(AbstractAutowireCapableBeanFactory.java:423)
+	  at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1702)
+	  at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:583)
+	  at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:502)
+	  at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:312)
+	  at org.springframework.beans.factory.support.AbstractBeanFactory$$Lambda$78.2059572982.getObject(Unknown Source:-1)
+	  at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:228)
+	  - locked <0xdf8> (a java.util.concurrent.ConcurrentHashMap)
+	  at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:310)
+	  at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:200)
+	  at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:760)
+	  at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:868)
+	  at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:549)
+	  - locked <0xdf9> (a java.lang.Object)
+	  at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752)
+	  at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:388)
+	  at org.springframework.boot.SpringApplication.run(SpringApplication.java:327)
+	  at nettyniotcpserver.application.ServerApplication.main(ServerApplication.java:24)
+
+"nioEventLoopGroup-2-1@3344" prio=10 tid=0x11 nid=NA runnable
+  java.lang.Thread.State: RUNNABLE
+	  at io.netty.bootstrap.ServerBootstrap$ServerBootstrapAcceptor.channelRead(ServerBootstrap.java:266)
+	  at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:362)
+	  at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:348)
+	  at io.netty.channel.AbstractChannelHandlerContext.fireChannelRead(AbstractChannelHandlerContext.java:340)
+	  at io.netty.channel.DefaultChannelPipeline$HeadContext.channelRead(DefaultChannelPipeline.java:1434)
+	  at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:362)
+	  at io.netty.channel.AbstractChannelHandlerContext.invokeChannelRead(AbstractChannelHandlerContext.java:348)
+	  at io.netty.channel.DefaultChannelPipeline.fireChannelRead(DefaultChannelPipeline.java:965)
+	  at io.netty.channel.nio.AbstractNioMessageChannel$NioMessageUnsafe.read(AbstractNioMessageChannel.java:93)
+	  at io.netty.channel.nio.NioEventLoop.processSelectedKey(NioEventLoop.java:628)
+	  at io.netty.channel.nio.NioEventLoop.processSelectedKeysOptimized(NioEventLoop.java:563)
+	  at io.netty.channel.nio.NioEventLoop.processSelectedKeys(NioEventLoop.java:480)
+	  at io.netty.channel.nio.NioEventLoop.run(NioEventLoop.java:442)
+	  at io.netty.util.concurrent.SingleThreadEventExecutor$5.run(SingleThreadEventExecutor.java:884)
+	  at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	  at java.lang.Thread.run(Thread.java:748)
+
+"Finalizer@3570" daemon prio=8 tid=0x3 nid=NA waiting
+  java.lang.Thread.State: WAITING
+	  at java.lang.Object.wait(Object.java:-1)
+	  at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:143)
+	  at java.lang.ref.ReferenceQueue.remove(ReferenceQueue.java:164)
+	  at java.lang.ref.Finalizer$FinalizerThread.run(Finalizer.java:212)
+
+"Reference Handler@3571" daemon prio=10 tid=0x2 nid=NA waiting
+  java.lang.Thread.State: WAITING
+	  at java.lang.Object.wait(Object.java:-1)
+	  at java.lang.Object.wait(Object.java:502)
+	  at java.lang.ref.Reference.tryHandlePending(Reference.java:191)
+	  at java.lang.ref.Reference$ReferenceHandler.run(Reference.java:153)
+
+"Attach Listener@3568" daemon prio=5 tid=0x5 nid=NA runnable
+  java.lang.Thread.State: RUNNABLE
+
+"Signal Dispatcher@3569" daemon prio=9 tid=0x4 nid=NA runnable
+  java.lang.Thread.State: RUNNABLE
+
+
+
+##### NioServerSocketChannel vs NioSocketChannel
+
+NioServerSocketChannel : socket bind
+
+NioSocketChannel : read & accept
