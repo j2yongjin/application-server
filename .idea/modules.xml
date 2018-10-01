@@ -9,6 +9,12 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/docker/docker.iml" filepath="$PROJECT_DIR$/.idea/modules/docker/docker.iml" group="docker" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/docker/docker_main.iml" filepath="$PROJECT_DIR$/.idea/modules/docker/docker_main.iml" group="docker" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/docker/docker_test.iml" filepath="$PROJECT_DIR$/.idea/modules/docker/docker_test.iml" group="docker" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/log-monitor/log-monitor.iml" filepath="$PROJECT_DIR$/.idea/modules/log-monitor/log-monitor.iml" group="log-monitor" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/log-monitor/log-monitor_main.iml" filepath="$PROJECT_DIR$/.idea/modules/log-monitor/log-monitor_main.iml" group="log-monitor" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/log-monitor/log-monitor_test.iml" filepath="$PROJECT_DIR$/.idea/modules/log-monitor/log-monitor_test.iml" group="log-monitor" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/netty-internal/netty-internal.iml" filepath="$PROJECT_DIR$/.idea/modules/netty-internal/netty-internal.iml" group="netty-internal" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/netty-internal/netty-internal_main.iml" filepath="$PROJECT_DIR$/.idea/modules/netty-internal/netty-internal_main.iml" group="netty-internal" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/netty-internal/netty-internal_test.iml" filepath="$PROJECT_DIR$/.idea/modules/netty-internal/netty-internal_test.iml" group="netty-internal" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/netty-nio-tcp-server/netty-nio-tcp-server.iml" filepath="$PROJECT_DIR$/.idea/modules/netty-nio-tcp-server/netty-nio-tcp-server.iml" group="netty-nio-tcp-server" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/netty-nio-tcp-server/netty-nio-tcp-server_main.iml" filepath="$PROJECT_DIR$/.idea/modules/netty-nio-tcp-server/netty-nio-tcp-server_main.iml" group="netty-nio-tcp-server" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/netty-nio-tcp-server/netty-nio-tcp-server_test.iml" filepath="$PROJECT_DIR$/.idea/modules/netty-nio-tcp-server/netty-nio-tcp-server_test.iml" group="netty-nio-tcp-server" />

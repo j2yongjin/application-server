@@ -1,3 +1,38 @@
+> ### Network 프로그램 기초
+>> ###Blocking Socket
+
+>> ### NonBlocking Socket
+
+> ### Netty
+ >> ### Bootstrap
+ 
+ 
+ >>> #### NioEventLoop
+ 
+ >>> #### NioServerSocketChannel
+ 
+ >>> #### EvnetExecutor
+ 
+ >>> #### 주요 패턴
+ >>>> ##### builder 패턴
+ >>>> ##### future 패턴
+ 
+
+ >> ### 채널 파이프라인
+ >>> #### 이벤트 실행
+ >>> #### 채널 파이프 라인
+ >>> #### 이벤트 핸들러
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+
+
 
 ##1. NioEventLoopGroup
    ###1) Boss
