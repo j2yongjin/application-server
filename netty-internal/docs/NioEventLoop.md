@@ -1,9 +1,11 @@
 
 ## EventLoop
-등록 된 채널에 대한 모든 I / O 작업을 처리합니다. 하나의 EventLoop 인스턴스는 일반적으로 둘 이상의 채널을 처리하지만 구현 세부 사항 및 내부 구조에 따라 다를 수 있습니다
+등록 된 채널에 대한 모든 I / O 작업을 처리합니다. 하나의 EventLoop 인스턴스는 일반적으로 둘 이상의 채널을 처리하지만 
+구현 세부 사항 및 내부 구조에 따라 다를 수 있습니다
 
 ## EventLoopGroup
-이벤트 루프 중에 나중에 선택하기 위해 처리되는 채널을 등록 할 수있는 특별한 EventExecutorGroup
+이벤트 루프 중에 나중에 선택하기 위해 처리되는 채널을 등록 할 수있는 
+특별한 EventExecutorGroup
 
 ## NioEventLoop
 SingleThreadEventLoop 구현은 채널을 셀렉터에 등록하고 이벤트 루프에서 이들을 멀티 플레 싱 (multi-plexing)합니다.
@@ -11,6 +13,24 @@ SingleThreadEventLoop 구현은 채널을 셀렉터에 등록하고 이벤트 �
 ## AbstractNioChannel
 
 Selector 기반의 방법을 사용하는 채널 구현의 추상 기본 클래스
+
+## MultithreadEventLoopGroup
+
+동시에 여러 스레드로 작업을 처리하는 EventLoopGroup 구현을위한 추상 기본 클래스입니다.
+
+## MultithreadEventExecutorGroup
+
+동시에 여러 스레드로 작업을 처리하는 EventExecutorGroup 구현을위한 추상 기본 클래스입니다.
+
+## AbstractEventExecutorGroup
+
+EventExecutorGroup 클래스에 대한 추상 베이스 클래스
+
+## EventExecutorGroup
+ EventExecutorGroup은 EventExecutor가 제공하는것을 next() 함수를 통해 제공합니다. 이외에도 그들의 생명주기를 관리하고
+ 글로벌 방식으로 차단할수 있습니다.
+ 
+
 
 ### NioEventLoopGroup
     NIO Selector 기반 채널에 사용되는 MultithreadEventLoopGroup 구현
@@ -106,6 +126,13 @@ Selector 기반의 방법을 사용하는 채널 구현의 추상 기본 클래�
 
 ##### ThreadPerTaskExecutor
 
+사용사례
+
+    if (executor == null) {
+                executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
+     }
+
+
     public final class ThreadPerTaskExecutor implements Executor {
         private final ThreadFactory threadFactory;
     
@@ -124,7 +151,7 @@ Selector 기반의 방법을 사용하는 채널 구현의 추상 기본 클래�
     
 ##### DefaultThreadFactory
 
-    스레드 팩토리 생성자
+스레드 팩토리 생성자
     public DefaultThreadFactory(String poolName, boolean daemon, int priority, ThreadGroup threadGroup) {
         if (poolName == null) {
             throw new NullPointerException("poolName");
@@ -158,8 +185,98 @@ Selector 기반의 방법을 사용하는 채널 구현의 추상 기본 클래�
         return t;
     }
     
-##### EventExecutor
 
+    
+### 이벤트 루프 객체 생성
+    children = new EventExecutor[nThreads];
+
+    for (int i = 0; i < nThreads; i ++) {
+        boolean success = false;
+        try {
+            children[i] = newChild(executor, args);
+
+
+    @Override
+    protected EventLoop newChild(Executor executor, Object... args) throws Exception {
+        return new NioEventLoop(this, executor, (SelectorProvider) args[0],
+            ((SelectStrategyFactory) args[1]).newSelectStrategy(), (RejectedExecutionHandler) args[2]);
+    }
+    
+    // NioEventLoop 객체를 생성한다.
+    
+## NioEventLoop
+![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/NioEventLoop.png)
+
+    NioEventLoop(NioEventLoopGroup parent, Executor executor, SelectorProvider selectorProvider,
+                 SelectStrategy strategy, RejectedExecutionHandler rejectedExecutionHandler) {
+        super(parent, executor, false, DEFAULT_MAX_PENDING_TASKS, rejectedExecutionHandler);
+        if (selectorProvider == null) {
+            throw new NullPointerException("selectorProvider");
+        }
+        if (strategy == null) {
+            throw new NullPointerException("selectStrategy");
+        }
+        provider = selectorProvider;
+        final SelectorTuple selectorTuple = openSelector();
+        selector = selectorTuple.selector;
+        unwrappedSelector = selectorTuple.unwrappedSelector;
+        selectStrategy = strategy;
+    }
+
+### SingleThreadEventLoop
+제출 된 모든 작업을 단일 스레드에서 실행하는 EventLoop의 추상 기본 클래스입니다.
+
+    protected SingleThreadEventLoop(EventLoopGroup parent, Executor executor,
+                                    boolean addTaskWakesUp, int maxPendingTasks,
+                                    RejectedExecutionHandler rejectedExecutionHandler) {
+        super(parent, executor, addTaskWakesUp, maxPendingTasks, rejectedExecutionHandler);
+        tailTasks = newTaskQueue(maxPendingTasks);
+    }
+
+    @Override
+    public EventLoopGroup parent() {
+        return (EventLoopGroup) super.parent();
+    }
+
+    @Override
+    public EventLoop next() {
+        return (EventLoop) super.next();
+    }
+
+    @Override
+    public ChannelFuture register(Channel channel) {
+        return register(new DefaultChannelPromise(channel, this));
+    }
+
+    @Override
+    public ChannelFuture register(final ChannelPromise promise) {
+        ObjectUtil.checkNotNull(promise, "promise");
+        promise.channel().unsafe().register(this, promise);
+        return promise;
+    }
+
+    @Deprecated
+    @Override
+    public ChannelFuture register(final Channel channel, final ChannelPromise promise) {
+        if (channel == null) {
+            throw new NullPointerException("channel");
+        }
+        if (promise == null) {
+            throw new NullPointerException("promise");
+        }
+
+        channel.unsafe().register(this, promise);
+        return promise;
+    }
+
+
+
+### NioEventLoop
+SingleThreadEventLoop 구현은 채널을 셀렉터에 등록하고 이벤트 루프에서 이들을 멀티 플레 싱 (multi-plexing)합니다.
+
+
+    
+##### EventExecutor
 EventExecutor는 이벤트 루프에서 Thread가 실행되는지 확인하는 편리한 메소드와 함께 제공되는 특별한 EventExecutorGroup입니다. 이 외에도 EventExecutorGroup을 확장하여 메서드에 액세스 할 수있는 일반적인 방법을 제공합니다
 
 ![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/EventExecutor.png)
@@ -329,6 +446,7 @@ FutureListener
 
 사용예시
 이벤트 등록
+
     final FutureListener<Object> terminationListener = new FutureListener<Object>() {
         @Override
         public void operationComplete(Future<Object> future) throws Exception {
@@ -349,13 +467,22 @@ EventExecutorGroup이 종료되었습니다.
         e.terminationFuture().addListener(terminationListener);
     }
     
-##### DefaultPromis
+##### DefaultPromise
+구현
+
+    public abstract class AbstractEventExecutor extends AbstractExecutorService implements EventExecutor {
+    ...
+    @Override
+    public <V> Promise<V> newPromise() {
+        return new DefaultPromise<V>(this);
+    }
 
 ![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/DefaultPromise.png)
     
 
     
 ###### addListener
+
     @Override
     public Promise<V> addListener(GenericFutureListener<? extends Future<? super V>> listener) {
         checkNotNull(listener, "listener");
@@ -409,9 +536,9 @@ EventExecutorGroup이 종료되었습니다.
 전용 executor를 사용한다
 
 
+
 ![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/GloalEventExecutor.png)
 
 #### BossGroup 갭쳐
-
 
 ![클래스다이어그램](https://github.com/j2yongjin/application-server/blob/master/netty-internal/assets/bossGroup_memory.png)
