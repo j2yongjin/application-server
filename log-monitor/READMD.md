@@ -52,7 +52,13 @@
    
 
 #### fluentd plugin 개발
-> parser sample
+
+> rabbitmq plugin
+
+https://github.com/nttcom/fluent-plugin-rabbitmq
+
+
+> ndibs_log parser sample
 
     require 'fluent/plugin/parser'
     
@@ -99,5 +105,50 @@
 wget https://dl.influxdata.com/influxdb/releases/influxdb_1.3.5_amd64.deb
 sudo dpkg -i influxdb_1.3.5_amd64.deb
 
-> 사용법
+
+> query sample
+
+  SELECT mean("bees") FROM "farm" GROUP BY time(30m) HAVING mean("bees") > 20
+  
+  SELECT mean(count("bees")) FROM "farm" GROUP BY time(30m)
+  
+  // 
+  SELECT mean("count_bees") FROM "aggregate_bees" WHERE time >= <start_time> AND time <= <end_time>
+  
+  // measurement(table) join
+  SELECT <field_key>[,<field_key>,<tag_key>] FROM <measurement_name>[,<measurement_name>]
+   
+   https://docs.influxdata.com/influxdb/v1.6/query_language/continuous_queries/#basic-syntax
+   
+   
+
+> 어드민
+  admin/amin
+  
+
+#### grafana
+> 설치
+  
+   https://grafana.com/grafana/download
+   
+   wget https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana_5.2.4_amd64.deb 
+   sudo dpkg -i grafana_5.2.4_amd64.deb 
+ 
+> 실행
+
+   sudo service grafana-server start
+   
+   sudo service grafana-server restart
+   
+> 웹페이지
+
+  https://localhost:3000
+  
+  id/pw   : admin/admin
+   
+ 
+   
+   
+
+  
 
