@@ -9,6 +9,9 @@
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/docker/docker.iml" filepath="$PROJECT_DIR$/.idea/modules/docker/docker.iml" group="docker" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/docker/docker_main.iml" filepath="$PROJECT_DIR$/.idea/modules/docker/docker_main.iml" group="docker" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/docker/docker_test.iml" filepath="$PROJECT_DIR$/.idea/modules/docker/docker_test.iml" group="docker" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/kafka/kafka.iml" filepath="$PROJECT_DIR$/.idea/modules/kafka/kafka.iml" group="kafka" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/kafka/kafka_main.iml" filepath="$PROJECT_DIR$/.idea/modules/kafka/kafka_main.iml" group="kafka" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/kafka/kafka_test.iml" filepath="$PROJECT_DIR$/.idea/modules/kafka/kafka_test.iml" group="kafka" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/log-monitor/log-monitor.iml" filepath="$PROJECT_DIR$/.idea/modules/log-monitor/log-monitor.iml" group="log-monitor" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/log-monitor/log-monitor_main.iml" filepath="$PROJECT_DIR$/.idea/modules/log-monitor/log-monitor_main.iml" group="log-monitor" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/log-monitor/log-monitor_test.iml" filepath="$PROJECT_DIR$/.idea/modules/log-monitor/log-monitor_test.iml" group="log-monitor" />

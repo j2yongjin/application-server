@@ -29,5 +29,9 @@
        hook_method_access_protected_enabled=false
        hook_method_access_none_enabled=false
        hook_method_ignore_prefixes=get,set
+       
+       
+> 애플리케이션 실행 옵션 
+  
 
        

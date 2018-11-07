@@ -11,6 +11,7 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/apm-scouter" />
             <option value="$PROJECT_DIR$/docker" />
+            <option value="$PROJECT_DIR$/kafka" />
             <option value="$PROJECT_DIR$/log-monitor" />
             <option value="$PROJECT_DIR$/netty-internal" />
             <option value="$PROJECT_DIR$/netty-nio-tcp-server" />

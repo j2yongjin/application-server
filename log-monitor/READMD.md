@@ -5,7 +5,7 @@
         --> 2)로그 수집 ( fluentd ) 
             --> 3)로그 파싱 (fluentd parser) 
                 --> 4)로그 저장 ( influexDb) 
-                    --> 5) 실시간 모니터링 그래프( grafana)
+                    --> 5) 실시간 모니터링 그래프( grafana) && 시각화 라이브러리
                          --> 6) 알림 메시지 전송
     
 ### 사용법
@@ -50,8 +50,111 @@
 >> 로그 write 테스트
    echo "2014-04-01T00:00:00 name=jake age=200 action=debugging1111" >> sample.log
    
+>> fluent.conf
+
+    <source>
+      @type tail
+      #format none
+      path /home/yjlee/fluentd/sample.log
+      #pos_file /home/yjlee/fluentd/sample.pos
+      tag ndibs.log
+      #rotate_wait 5
+      #read_from_head true
+      #refresh_interval 60
+      <parse>
+       @type ndibs_log
+      </parse>
+    </source>
+    
+    <match ndibs.log>
+     @type copy
+     <store>
+      @type influxdb
+      host localhost
+      port 8086
+      dbname request
+      user admin
+      password admin
+      flush_interval 10s
+      time_precision ms
+      tag_keys ["cmd"]
+      measurement ndibs_log
+     </store>
+     <store>
+      @type stdout
+     </store>
+    </match>
+    
+    
+    
+    #<filter **>
+    # @type passthru
+    #</filter>
+    
+    <source>
+     @type df
+     tag ndibs.df
+     option -k
+     interval 3
+     tag_prefix df
+     target_mounts
+     replace_slash true
+     hostname true
+    </source>
+    
+    <match ndibs.df>
+     @type copy
+     <store>
+      @type influxdb
+      host localhost
+      port 8086
+      dbname request
+      user admin
+      password admin
+      flush_interval 10s
+      time_precision ms
+      tag_keys ["hostname"]
+      measurement ndibs_df
+     </store>
+    </match>
+    
+    
+    <source>
+     @type rabbitmq
+     tag rabbitmq.log
+     host 127.0.0.1
+     port 5672
+     user username
+     pass password
+     vhost /
+     #exchange test_exchange
+     queue test_queue
+    </source>
+    
+    <match rabbitmq.log>
+     @type copy
+     <store>
+      @type influxdb
+      host localhost
+      port 8086
+      dbname request
+      user admin
+      password admin
+      flush_interval 10s
+      time_precision ms
+      tag_keys ["hostname"]
+      measurement rabbitmq_log
+     </store>
+    </match>
+
+
+   
 
 #### fluentd plugin 개발
+
+> 플러그인 목록 
+
+ https://www.fluentd.org/plugins/all
 
 > rabbitmq plugin
 
@@ -106,6 +209,28 @@ wget https://dl.influxdata.com/influxdb/releases/influxdb_1.3.5_amd64.deb
 sudo dpkg -i influxdb_1.3.5_amd64.deb
 
 
+> 운영 
+
+  필드 타입 확인 
+  
+  SHOW FIELD KEYS FROM ndibs_log;
+   
+  테이블삭제
+  DROP MEASUREMENT <measurement_name>
+  
+  데이터베이스 추가
+  CREATE DATABASE "NOAA_water_database" WITH DURATION 3d REPLICATION 1 SHARD DURATION 1h NAME "liquid"
+  
+  DROP MEASUREMENT "ndibs_log"
+  
+> 보관 주기
+
+   create retention policy "2day_only" on "request" duration 2d replication 1
+   
+   alter retention policy "2day_only" on "request" duration 2d replication 1 default
+   
+   drop retention policy "2day_only"
+
 > query sample
 
   SELECT mean("bees") FROM "farm" GROUP BY time(30m) HAVING mean("bees") > 20
@@ -145,6 +270,11 @@ sudo dpkg -i influxdb_1.3.5_amd64.deb
   https://localhost:3000
   
   id/pw   : admin/admin
+  
+> cmd stat
+  
+  SELECT count("type") FROM "ndibs_log" WHERE ("type" = 'Request') AND time >= 1538642898672ms and time <= 1538644336010ms GROUP BY time(1s), "cmd" fill(0)
+  
    
  
    

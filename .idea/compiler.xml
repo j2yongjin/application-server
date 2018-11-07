@@ -11,6 +11,8 @@
       <module name="application-server_test" target="1.8" />
       <module name="docker_main" target="1.8" />
       <module name="docker_test" target="1.8" />
+      <module name="kafka_main" target="1.8" />
+      <module name="kafka_test" target="1.8" />
       <module name="log-monitor_main" target="1.8" />
       <module name="log-monitor_test" target="1.8" />
       <module name="netty-internal_main" target="1.8" />
